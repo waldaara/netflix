@@ -6,6 +6,7 @@ from lib.db import MySQL
 
 class AdminView:
     def __init__(self, root, logout_callback):
+
         self.root = root
         self.logout_callback = logout_callback
         self.database = MySQL()
@@ -38,15 +39,6 @@ class AdminView:
         self.crud_frame = tk.Frame(self.admin_frame)
         self.crud_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
-        # Table operations buttons
-        tk.Button(self.crud_frame, text="Update Data", command=self.update_data).pack(pady=5)
-        tk.Button(self.crud_frame, text="Delete Data", command=self.delete_data).pack(pady=5)
-        tk.Button(self.crud_frame, text="Add New Data", command=self.add_new_data).pack(pady=5)
-
-        # Treeview for displaying rows
-        self.treeview = ttk.Treeview(self.crud_frame, columns=(), show="headings", selectmode="browse")
-        self.treeview.pack(fill=tk.BOTH, expand=True)
-
         # Bind the click event on the table_listbox to show rows
         self.table_listbox.bind('<<ListboxSelect>>', self.show_rows)
 
@@ -71,23 +63,68 @@ class AdminView:
     def update_data(self):
         selected_table = self.get_selected_table()
         if selected_table:
-            messagebox.showinfo("Update Data", f"Updating data in table: {selected_table}")
+            selected_row = self.get_selected_row()
+            if selected_row:
+                self.crud_frame.destroy()
+                self.crud_frame = tk.Frame(self.admin_frame)
+                print(selected_row)
+                # Showing editable fields
+                for key in selected_row:
+                    label = (tk.Label(self.crud_frame, text=key))
+                    label.pack(pady=5)
+                    textfield = tk.Entry(self.crud_frame, width=30)
+                    textfield.insert(0, selected_row[key])
+                    textfield.pack(pady=10)
+
+                tk.Button(self.crud_frame, text="Save", command=self.save_changes).pack(pady=5)
+                tk.Button(self.crud_frame, text="Cancel", command=self.cancel_changes).pack(pady=5)
+                self.crud_frame.pack()
 
     def delete_data(self):
         selected_table = self.get_selected_table()
         if selected_table:
-            messagebox.showinfo("Delete Data", f"Deleting data in table: {selected_table}")
+            selected_row = self.get_selected_row()
+            # if selected_row:
 
     def add_new_data(self):
         selected_table = self.get_selected_table()
         if selected_table:
-            messagebox.showinfo("Add New Data", f"Adding new data to table: {selected_table}")
+
+            primer_elemento = self.treeview.get_children()[0]
+
+            # Seleccionar el primer elemento y establecer el foco en él
+            self.treeview.selection_set(primer_elemento)
+            self.treeview.focus(primer_elemento)
+
+            selected_row = self.get_selected_row()
+
+            self.crud_frame.destroy()
+            self.crud_frame = tk.Frame(self.admin_frame)
+
+            print(selected_row)
+
+            # Showing editable fields
+            for key in selected_row:
+                label = (tk.Label(self.crud_frame, text=key))
+                label.pack(pady=5)
+                textfield = tk.Entry(self.crud_frame, width=30)
+                textfield.pack(pady=10)
+
+            tk.Button(self.crud_frame, text="Save", command=self.save_changes).pack(pady=5)
+            tk.Button(self.crud_frame, text="Cancel", command=self.cancel_changes).pack(pady=5)
+            self.crud_frame.pack()
+
+    def save_changes(self):
+
+    def cancel_changes(self):
+        print("canceled")
 
     def logout(self):
         if self.logout_callback:
             self.logout_callback()
 
     def get_selected_table(self):
+        table = dict()
         selected_index = self.table_listbox.curselection()
         if selected_index:
             return self.table_listbox.get(selected_index)
@@ -100,10 +137,39 @@ class AdminView:
         if selected_table:
             self.display_rows(selected_table)
 
+    def get_selected_row(self):
+        row = dict()
+
+        selected_row = self.treeview.focus()
+
+        if selected_row:
+
+            keys = self.treeview["columns"]
+            values = self.treeview.item(selected_row)['values']
+
+            for key, value in zip(keys, values):
+                row[key] = value
+
+            return row
+        else:
+            messagebox.showwarning("No Row Selected", "Please select a row from the list.")
+            return None
+
     def display_rows(self, table_name):
-        # Clear previous data in the Treeview
-        for child in self.treeview.get_children():
-            self.treeview.delete(child)
+        if self.crud_frame:
+            self.crud_frame.destroy()
+        # Frame for CRUD operations and Treeview
+        self.crud_frame = tk.Frame(self.admin_frame)
+        self.crud_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+
+        # Table operations buttons
+        tk.Button(self.crud_frame, text="Update Data", command=self.update_data).pack(pady=5)
+        tk.Button(self.crud_frame, text="Delete Data", command=self.delete_data).pack(pady=5)
+        tk.Button(self.crud_frame, text="Add New Data", command=self.add_new_data).pack(pady=5)
+
+        # Treeview for displaying rows
+        self.treeview = ttk.Treeview(self.crud_frame, columns=(), show="headings", selectmode="browse")
+        self.treeview.pack(fill=tk.BOTH, expand=True)
 
         # Get the rows from the selected table
         connection = self.database.get_connection()
