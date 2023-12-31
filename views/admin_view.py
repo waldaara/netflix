@@ -6,7 +6,7 @@ from lib.db import MySQL
 
 class AdminView:
     def __init__(self, root, logout_callback):
-
+        self.edited_row = {}
         self.root = root
         self.logout_callback = logout_callback
         self.database = MySQL()
@@ -69,14 +69,27 @@ class AdminView:
                 self.crud_frame = tk.Frame(self.admin_frame)
                 print(selected_row)
                 # Showing editable fields
-                for key in selected_row:
-                    label = (tk.Label(self.crud_frame, text=key))
+                self.edited_row = {}
+                for i, key in enumerate(selected_row):
+                    label = tk.Label(self.crud_frame, text=key)
                     label.pack(pady=5)
-                    textfield = tk.Entry(self.crud_frame, width=30)
-                    textfield.insert(0, selected_row[key])
-                    textfield.pack(pady=10)
 
-                tk.Button(self.crud_frame, text="Save", command=self.save_changes).pack(pady=5)
+                    # Condición para hacer editable solo el primer elemento
+                    if i != 0:
+                        entry_var = tk.StringVar(value=selected_row[key])
+                        entry = tk.Entry(self.crud_frame, width=30, textvariable=entry_var)
+                        entry.pack(pady=10)
+
+                        # Almacena la variable asociada al Entry en el diccionario
+                        self.edited_row[key] = entry_var
+                    else:
+                        entry_var = tk.StringVar(value=selected_row[key])
+                        entry = tk.Entry(self.crud_frame, width=30, textvariable=entry_var)
+                        entry.pack(pady=10)
+                        entry.config(state="readonly")
+                        self.edited_row[key] = entry_var
+
+                tk.Button(self.crud_frame, text="Save", command=self.save_changes_update).pack(pady=5)
                 tk.Button(self.crud_frame, text="Cancel", command=self.cancel_changes).pack(pady=5)
                 self.crud_frame.pack()
 
@@ -84,12 +97,31 @@ class AdminView:
         selected_table = self.get_selected_table()
         if selected_table:
             selected_row = self.get_selected_row()
-            # if selected_row:
+            if selected_row:
+                self.crud_frame.destroy()
+                self.crud_frame = tk.Frame(self.admin_frame)
+                print(selected_row)
+                # Showing editable fields
+                self.edited_row = {}
+                for i, key in enumerate(selected_row):
+                    label = tk.Label(self.crud_frame, text=key)
+                    label.pack(pady=5)
+
+                    entry_var = tk.StringVar(value=selected_row[key])
+                    entry = tk.Entry(self.crud_frame, width=30, textvariable=entry_var)
+                    entry.pack(pady=10)
+                    entry.config(state="readonly")
+
+                    # Almacena la variable asociada al Entry en el diccionario
+                    self.edited_row[key] = entry_var
+
+                tk.Button(self.crud_frame, text="Save", command=self.save_changes_delete).pack(pady=5)
+                tk.Button(self.crud_frame, text="Cancel", command=self.cancel_changes).pack(pady=5)
+                self.crud_frame.pack()
 
     def add_new_data(self):
         selected_table = self.get_selected_table()
         if selected_table:
-
             primer_elemento = self.treeview.get_children()[0]
 
             # Seleccionar el primer elemento y establecer el foco en él
@@ -102,29 +134,123 @@ class AdminView:
             self.crud_frame = tk.Frame(self.admin_frame)
 
             print(selected_row)
+            self.edited_row = {}
 
             # Showing editable fields
-            for key in selected_row:
-                label = (tk.Label(self.crud_frame, text=key))
+            for i, key in enumerate(selected_row):
+                label = tk.Label(self.crud_frame, text=key)
                 label.pack(pady=5)
-                textfield = tk.Entry(self.crud_frame, width=30)
-                textfield.pack(pady=10)
 
-            tk.Button(self.crud_frame, text="Save", command=self.save_changes).pack(pady=5)
+                # Condición para hacer editable solo el primer elemento
+                if i != 0:
+                    entry_var = tk.StringVar()
+                    entry = tk.Entry(self.crud_frame, width=30, textvariable=entry_var)
+                    entry.pack(pady=10)
+
+                    # Almacena la variable asociada al Entry en el diccionario
+                    self.edited_row[key] = entry_var
+                else:
+                    label_value = tk.Label(self.crud_frame)
+                    label_value.pack(pady=10)
+
+            tk.Button(self.crud_frame, text="Save", command=self.save_changes_add).pack(pady=5)
             tk.Button(self.crud_frame, text="Cancel", command=self.cancel_changes).pack(pady=5)
             self.crud_frame.pack()
+            print(self.edited_row)
 
-    def save_changes(self):
+    def save_changes_add(self):
+        # Save changes for adding data
+        connection = self.database.get_connection()
+        cursor = connection.cursor()
+        try:
+            print(self.get_selected_table())
+            table = self.get_selected_table()
+
+            # Valores del diccionario menos el primero, ya que ese no se debe editar
+            # Obtengo a los valores de la key en forma de tupla,y luego los coloco en el formato necesario para la Query
+            tuple_key = tuple(self.edited_row.keys())
+            str_key = "("
+            for key in tuple_key:
+                if (key != tuple_key[-1]):
+                    str_key = str_key + key + ","
+                else:
+                    str_key = str_key + key
+            str_key = str_key + ")"
+            # Valores del diccionario en forma de tupla
+            tuple_value = tuple(var.get() for var in self.edited_row.values())
+            if len(tuple_key) == 1:
+                print(f"INSERT INTO {table} ({tuple_key[0]}) VALUES ('{tuple_value[0]}')")
+                cursor.execute(f"INSERT INTO {table} ({tuple_key[0]}) VALUES ('{tuple_value[0]}')")
+            else:
+                print(f"INSERT INTO {table} {str_key} VALUES {tuple_value}")
+                cursor.execute(f"INSERT INTO {table} {str_key} VALUES {tuple_value}")
+            connection.commit()
+            print("Insercion exitosa")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error adding new data: {e}")
+
+        finally:
+            cursor.close()
+
+        self.show_rows(self)
+
+    def save_changes_update(self):
+        # Save changes for adding data
+        connection = self.database.get_connection()
+        cursor = connection.cursor()
+        try:
+            print(self.get_selected_table())
+            table = self.get_selected_table()
+            # Valores del diccionario menos el primero, ya que ese no se debe editar
+            # Obtengo a los valores de la key en forma de tupla,y luego los coloco en el formato necesario para la Query
+            tuple_key = tuple(self.edited_row.keys())
+            tuple_value = tuple(var.get() for var in self.edited_row.values())
+            for key,value in zip(tuple_key,tuple_value):
+                if key != tuple_key[0]:
+                    print(f"UPDATE {table} SET {key} = '{value}' WHERE {tuple_key[0]} = '{tuple_value[0]}'")
+                    cursor.execute(f"UPDATE {table} SET {key} = '{value}' WHERE {tuple_key[0]} = '{tuple_value[0]}'")
+            connection.commit()
+            print("Insercion exitosa")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error adding new data: {e}")
+
+        finally:
+            cursor.close()
+
+        self.show_rows(self)
+
+    def save_changes_delete(self):
+        # Save changes for adding data
+        connection = self.database.get_connection()
+        cursor = connection.cursor()
+        try:
+            print(self.get_selected_table())
+            table = self.get_selected_table()
+            # Valores del diccionario menos el primero, ya que ese no se debe editar
+            # Obtengo a los valores de la key en forma de tupla,y luego los coloco en el formato necesario para la Query
+            tuple_key = tuple(self.edited_row.keys())
+            tuple_value = tuple(var.get() for var in self.edited_row.values())
+
+            print(f"DELETE FROM {table} WHERE {tuple_key[0]} = '{tuple_value[0]}'")
+            cursor.execute(f"DELETE FROM {table} WHERE {tuple_key[0]} = '{tuple_value[0]}'")
+            connection.commit()
+            print("Insercion exitosa")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error adding new data: {e}")
+
+        finally:
+            cursor.close()
+
+        self.show_rows(self)
 
     def cancel_changes(self):
-        print("canceled")
+        self.show_rows(self)
 
     def logout(self):
         if self.logout_callback:
             self.logout_callback()
 
     def get_selected_table(self):
-        table = dict()
         selected_index = self.table_listbox.curselection()
         if selected_index:
             return self.table_listbox.get(selected_index)
