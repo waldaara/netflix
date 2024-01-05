@@ -5,11 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="afc2343e-dab7-495f-ac04-39a2dba515a3" name="Changes" comment="">
+<<<<<<< HEAD
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/netflix.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/netflix.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/views/user_view.py" beforeDir="false" afterPath="$PROJECT_DIR$/views/user_view.py" afterDir="false" />
+=======
+      <change beforePath="$PROJECT_DIR$/views/admin_view.py" beforeDir="false" afterPath="$PROJECT_DIR$/views/admin_view.py" afterDir="false" />
+>>>>>>> 0034a117d9868d683d8078acce8ba505d95d19b9
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -26,6 +30,12 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+<<<<<<< HEAD
+=======
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+>>>>>>> 0034a117d9868d683d8078acce8ba505d95d19b9
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 1
 }</component>
@@ -43,7 +53,10 @@
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+<<<<<<< HEAD
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+=======
+>>>>>>> 0034a117d9868d683d8078acce8ba505d95d19b9
     &quot;last_opened_file_path&quot;: &quot;C:/Users/Hp/Documents/netflix&quot;
   }
 }</component>
