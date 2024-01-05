@@ -3,7 +3,7 @@ from tkinter import END, ACTIVE
 
 import MySQLdb
 from lib.db import MySQL
-import main as main
+
 
 class UserView:
 
@@ -20,6 +20,7 @@ class UserView:
         # Botón de cerrar sesión
         tk.Button(self.user_frame, text="Cerrar Sesión", command=self.logout).grid(row=0, padx=(600, 0), pady=(0, 0))
         self.userOptions()
+        # self.getProfiles()
 
     def logout(self):
         # Destruir el marco de interfaz de usuario
@@ -89,8 +90,8 @@ class UserView:
             # Close the cursor
             cursor.close()
 
-    def chargeList(self):
-        main.App.__init__().email_var
+    def getProfiles(self):
+
 
         database = MySQL()
         connection = database.get_connection()
@@ -100,7 +101,8 @@ class UserView:
             cursor = connection.cursor()
 
             # Execute query
-            cursor.execute("SELECT serie.titulo FROM serie")
+            cursor.execute("SELECT p.nombre"
+                           "FROM perfil p JOIN cuenta USING(correo_cuenta)")
 
             # Fetch all the rows
             rows = cursor.fetchall()
@@ -109,7 +111,7 @@ class UserView:
             for row in rows:
                 data.append(row[0])
 
-            self.searchBar(data)
+            self.showProfile(data)
 
         except MySQLdb.Error as e:
             print("MySQL Error:", e)
@@ -117,6 +119,11 @@ class UserView:
         finally:
             # Close the cursor
             cursor.close()
+
+    def showProfile(self, listProfiles):
+        for profile in listProfiles:
+            tk.Button(self.user_frame, text= profile, width=50)
+
     def userOptions(self):
         moviesButton = tk.Button(self.user_frame, text="Find movies", width=12, command=self.chargeMovies)
         seriesButton = tk.Button(self.user_frame, text="Find series", width=12, command=self.chargeseries)
