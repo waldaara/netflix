@@ -60,7 +60,7 @@ class App:
             rows = cursor.fetchall()
 
             if len(rows) == 1:
-                return self.show_user_interface()
+                return self.show_user_interface(email)
 
         except MySQLdb.Error as e:
             print("MySQL Error:", e)
@@ -83,7 +83,7 @@ class App:
         admin_interface = AdminView(self.root, self.logout)
         self.current_interface_frame = admin_interface
 
-    def show_user_interface(self):
+    def show_user_interface(self, correo_cuenta):
         # Ocultar el marco de inicio de sesión
         self.login_frame.pack_forget()
 
@@ -92,7 +92,7 @@ class App:
             self.current_interface_frame.destroy()
 
         # Crear la interfaz de usuario y pasar el callback de cierre de sesión
-        user_interface = UserView(self.root, self.logout)
+        user_interface = UserView(self.root, self.logout, correo_cuenta)
         self.current_interface_frame = user_interface
 
     def logout(self):

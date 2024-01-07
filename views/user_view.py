@@ -1,13 +1,11 @@
-import tkinter as tk
 from tkinter import END, ACTIVE
-
-import MySQLdb
+import tkinter as tk
 from lib.db import MySQL
-
+import MySQLdb
 
 class UserView:
-
-    def __init__(self, root, logout_callback):
+    idProfile = 0
+    def __init__(self, root, logout_callback, correo_cuenta):
         self.root = root
         self.logout_callback = logout_callback
 
@@ -19,8 +17,8 @@ class UserView:
 
         # Botón de cerrar sesión
         tk.Button(self.user_frame, text="Cerrar Sesión", command=self.logout).grid(row=0, padx=(600, 0), pady=(0, 0))
-        self.userOptions()
-        # self.getProfiles()
+        # self.userOptions()
+        self.getProfiles(correo_cuenta)
 
     def logout(self):
         # Destruir el marco de interfaz de usuario
@@ -90,8 +88,7 @@ class UserView:
             # Close the cursor
             cursor.close()
 
-    def getProfiles(self):
-
+    def getProfiles(self,  correo_cuenta):
 
         database = MySQL()
         connection = database.get_connection()
@@ -99,17 +96,16 @@ class UserView:
         try:
             # Create a cursor to interact with the database
             cursor = connection.cursor()
-
             # Execute query
-            cursor.execute("SELECT p.nombre"
-                           "FROM perfil p JOIN cuenta USING(correo_cuenta)")
+            cursor.execute("SELECT p.nombre, p.id_perfil FROM perfil p JOIN cuenta c USING(correo_cuenta) WHERE "
+                           f"c.correo_cuenta = '{correo_cuenta}'")
 
             # Fetch all the rows
             rows = cursor.fetchall()
             data = []
 
             for row in rows:
-                data.append(row[0])
+                data.append(row)
 
             self.showProfile(data)
 
@@ -120,14 +116,27 @@ class UserView:
             # Close the cursor
             cursor.close()
 
-    def showProfile(self, listProfiles):
-        for profile in listProfiles:
-            tk.Button(self.user_frame, text= profile, width=50)
+    def showProfile(self, list_profiles):
+        cont = 1
+        for p in list_profiles:
+            id = p[1]
+            profile = tk.Button(self.user_frame, text=p[0], width = 15, command=lambda: self.userOptions(id))
+            profile.grid(row=cont, column=0, padx=(0, 600), pady=(0, 5))
+            cont += 1
 
-    def userOptions(self):
+
+    def userOptions(self,id_perfil):
+        print(id_perfil)
+        for widget in self.user_frame.winfo_children():
+            widget.destroy()
+
+        tk.Label(self.user_frame, text="Netflix", font=("Arial", 25)).grid(row=0, column=0, padx=(0, 600), pady=(0, 0))
+
+        # Botón de cerrar sesión
+        tk.Button(self.user_frame, text="Cerrar Sesión", command=self.logout).grid(row=0, padx=(600, 0), pady=(0, 0))
         moviesButton = tk.Button(self.user_frame, text="Find movies", width=12, command=self.chargeMovies)
         seriesButton = tk.Button(self.user_frame, text="Find series", width=12, command=self.chargeseries)
-        myListButton = tk.Button(self.user_frame, text="Your list", width=12)
+        myListButton = tk.Button(self.user_frame, text="Your list", width=12, command= lambda:self.chargeFavSeries(id_perfil))
 
         moviesButton.grid(row=1, column=0, padx=(0, 600), pady=(0, 5))
         seriesButton.grid(row=2, column=0, padx=(0, 600), pady=(0, 5))
@@ -165,4 +174,40 @@ class UserView:
         my_List.bind("<<ListboxSelect>>", fillout)
         my_Entry.bind("<KeyRelease>", check)
 
+    def chargeFavSeries(self, id_perfil):
+        print(id_perfil)
+        database = MySQL()
+        connection = database.get_connection()
+
+        try:
+            # Create a cursor to interact with the database
+            cursor = connection.cursor()
+
+            # Execute query
+            cursor.execute(f"SELECT serie.titulo FROM favorito_serie JOIN serie ON serie.id_serie = favorito_serie.id_serie WHERE favorito_serie.id_perfil = {id_perfil}")
+
+            # Fetch all the rows
+            rows = cursor.fetchall()
+            data = []
+
+            for row in rows:
+                print(row)
+                data.append(row[0])
+
+            cursor.execute(f"SELECT pelicula.titulo FROM favorito_pelicula JOIN pelicula ON pelicula.id_pelicula = favorito_pelicula.id_pelicula WHERE favorito_pelicula.id_perfil = {id_perfil}")
+            rows = cursor.fetchall()
+
+            for row in rows:
+                print(row)
+                data.append(row[0])
+
+            print(data)
+            self.searchBar(data)
+
+        except MySQLdb.Error as e:
+            print("MySQL Error:", e)
+
+        finally:
+            # Close the cursor
+            cursor.close()
 # david.miller@email.com
